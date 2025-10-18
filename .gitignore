@@ -1,0 +1,14 @@
+
+# Trained model artifacts
+predictor_model/
+predictor_classifier_model/
+predictor_classifier_model_equal_width/
+predictor_staged_classifier_model/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Log files
+logs/
+*.log
