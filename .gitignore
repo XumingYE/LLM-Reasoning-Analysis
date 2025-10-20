@@ -4,7 +4,8 @@ predictor_model/
 predictor_classifier_model/
 predictor_classifier_model_equal_width/
 predictor_staged_classifier_model/
-
+predictor_classifier_model_bert_qwen_equal_freq_5_bins/
+predictor_regressor_model_equal_freq/
 # Python cache
 __pycache__/
 *.pyc
