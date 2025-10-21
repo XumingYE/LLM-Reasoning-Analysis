@@ -2,18 +2,17 @@ import argparse
 import json
 import os
 import pandas as pd
+import numpy as np
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
-import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 def main():
     # --- Argument Parsing ---
-    parser = argparse.ArgumentParser(description="Train a regression model to predict 'counts' bins.")
+    parser = argparse.ArgumentParser(description="Train a regression model to predict manually defined 'counts' bins.")
     parser.add_argument('--model_path', type=str, default='/home/yexuming/model/hg/bert-base-uncased', help='Path or name of the pretrained base model.')
     parser.add_argument('--data_path', type=str, default='data/merged_with_labels_and_counts.jsonl', help='Path to the .jsonl dataset.')
-    parser.add_argument('--output_dir', type=str, default='predictor_regressor_model_equal_freq', help='Directory to save the trained model.')
-    parser.add_argument('--num_bins', type=int, default=5, help='Number of bins to classify counts into.')
+    parser.add_argument('--output_dir', type=str, default='predictor_regressor_model_manual_10_bins', help='Directory to save the trained model.')
     parser.add_argument('--epochs', type=int, default=3, help='Number of training epochs.')
     parser.add_argument('--batch_size', type=int, default=4, help='Per-device training and evaluation batch size.')
     parser.add_argument('--learning_rate', type=float, default=2e-5, help='Learning rate.')
@@ -28,26 +27,28 @@ def main():
     print(f"Loading dataset from {args.data_path}...")
     df = pd.read_json(args.data_path, lines=True)
 
-    # Create bins using quantile-based method
-    print(f"Creating {args.num_bins} bins for 'counts'...")
-    try:
-        # Use pd.qcut to create bins with equal frequency
-        df['label'], bin_edges = pd.qcut(df['counts'], q=args.num_bins, labels=False, retbins=True, duplicates='drop')
-    except ValueError as e:
-        print(f"Error: Could not create bins. {e}. Try a smaller number of bins.")
-        return
+    # Define manual bin edges
+    bin_edges = [0, 1, 8, 16, 25, 35, 56, 81, 140, 239, 3000]
+    num_bins = len(bin_edges) - 1
+    labels = list(range(num_bins))
+    print(f"Using manually defined bins. Creating {num_bins} bins...")
 
-    # Get the actual number of bins created
-    actual_num_bins = df['label'].nunique()
-    print(f"Successfully created {actual_num_bins} bins out of the requested {args.num_bins}.")
+    # Create bins using manual edges
+    df['label'] = pd.cut(df['counts'], bins=bin_edges, labels=labels, right=True, include_lowest=True)
+
+    # Remove samples where label could not be assigned (if any)
+    df.dropna(subset=['label'], inplace=True)
+    df['label'] = df['label'].astype(int)
 
     # Print bin information for clarity
-    print("\n--- Count Ranges for Each Bin ---")
-    for i in range(actual_num_bins):
-        min_val = df[df['label'] == i]['counts'].min()
-        max_val = df[df['label'] == i]['counts'].max()
-        print(f"Bin {i}: counts from {min_val} to {max_val}")
-    print("-----------------------------------\n")
+    print("\n--- Original 'counts' Ranges and Sample Counts for Each Bin ---")
+    for i in labels:
+        bin_data = df[df['label'] == i]
+        min_val = bin_data['counts'].min()
+        max_val = bin_data['counts'].max()
+        count = len(bin_data)
+        print(f"Bin {i}: `counts` from {min_val} to {max_val} ({count} samples)")
+    print("------------------------------------------------------------\n")
 
     # Combine text fields for model input
     df['text'] = (df['instruction'].fillna('') + ' ' + df['input'].fillna(''))
@@ -101,7 +102,14 @@ def main():
         weight_decay=0.01,
         logging_dir=f'{args.output_dir}/logs',
         logging_steps=100,
-        save_steps=500,
+        eval_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        load_best_model_at_end=True,
+        metric_for_best_model="mae",
+        greater_is_better=False,
+        save_total_limit=2,
         report_to="none",
     )
 

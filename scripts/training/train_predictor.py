@@ -75,9 +75,15 @@ def main():
         weight_decay=0.01,
         logging_dir=f'{args.output_dir}/logs',
         logging_steps=100,
+        eval_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        load_best_model_at_end=True,
+        metric_for_best_model="mse",
+        greater_is_better=False,
+        save_total_limit=2,
         report_to="none",
-        # NOTE: evaluation_strategy and save_strategy are omitted for max compatibility.
-        # We will evaluate and save manually after training.
     )
 
     # --- 6. Define Evaluation Metrics ---

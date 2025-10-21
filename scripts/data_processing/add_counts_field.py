@@ -7,13 +7,13 @@ def process_file(input_file, output_file):
     keywords = [
         'Wait', 'Alternatively', 'Another angle', 'Another approach', 'But wait',
         'Hold on', 'Hmm', 'Maybe', 'Looking back', 'Okay', 'Let me', 'First', 'Then',
-        'Alright', 'Compute', 'Correct', 'Good', 'Got it', 'I don’t see any errors', 'I think',
-        'Let me double-check', 'Let’s see', 'Now', 'Remember', 'Seems solid', 'Similarly',
-        'So', 'Starting', 'That’s correct', 'That seems right', 'Therefore', 'Thus'
+        'Alright', 'Compute', 'Correct', 'Good', 'Got it', 'I don\'t see any errors', 'I think',
+        'Let me double-check', 'Let\'s see', 'Now', 'Remember', 'Seems solid', 'Similarly',
+        'So', 'Starting', 'That\'s correct', 'That seems right', 'Therefore', 'Thus'
     ]
     
     # Create a single regex pattern to find any of the keywords
-    keyword_pattern = re.compile(r'(' + '|'.join(re.escape(k) for k in keywords) + r')', re.IGNORECASE)
+    keyword_pattern = re.compile(r'(' + '|'.join(re.escape(k) for k in keywords) + r')')
 
     with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
         for line in infile:

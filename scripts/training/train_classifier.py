@@ -96,6 +96,14 @@ def main():
         weight_decay=0.01,
         logging_dir=f'{args.output_dir}/logs',
         logging_steps=100,
+        eval_strategy="steps",
+        eval_steps=1000,
+        save_strategy="steps",
+        save_steps=1000,
+        load_best_model_at_end=True,
+        metric_for_best_model="f1",
+        greater_is_better=True,
+        save_total_limit=2,
         report_to="none",
     )
 

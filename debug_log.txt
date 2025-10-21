@@ -1,0 +1,7 @@
+--- Debugging `inputs` dictionary in compute_loss ---
+Keys available: ['labels']
+
+Key: labels
+  Type: <class 'torch.Tensor'>
+  Shape: torch.Size([4])
+---
