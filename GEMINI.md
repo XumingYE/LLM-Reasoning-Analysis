@@ -50,3 +50,17 @@ python scripts/training/train_predictor.py
 ### Adding a new script
 
 To add a new script, use the `write_file` tool to create a new file in the `scripts/` directory. Make sure to follow the existing coding style and conventions.
+
+## Running Background Tasks
+
+When running long-running tasks, such as training a model, use `nohup` to ensure the process continues even if the connection is lost.
+
+-   **Use `nohup`**: Start the command with `nohup`.
+-   **Redirect Output**: Redirect both stdout and stderr to a log file with a descriptive name that reflects the script being run.
+-   **Run in Background**: Append `&` to the end of the command to run the process in the background.
+
+Example:
+
+```bash
+nohup python scripts/training/train_predictor.py > predictor_training.log 2>&1 &
+```

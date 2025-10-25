@@ -18,6 +18,8 @@
 | 8 | **DeBERTa + 特征工程** | 分类 (10类) | Weighted CrossEntropy | 手动分箱 (同方法6)<br>**+ 特征工程标记** | DeBERTa-v3-large (435M) | Acc: 44.4%<br>**F1-macro: 19.6%** | 添加[EXPLAIN], [CREATIVE]等特征标记<br>性能与方法6相同 |
 | 9 | **K-means聚类分类器 (含异常值)** | 分类 (10类) | Weighted CrossEntropy | K-means聚类<br>基于counts、词数等特征<br>**未过滤异常值** | DeBERTa-v3-large (435M) | 不详 | ❌ Label 6仅219样本，counts范围133-943<br>数据不均衡 |
 | 10 | **🏆 K-means聚类分类器 (Clean)** | 分类 (8类) | Weighted CrossEntropy | K-means聚类<br>**过滤异常值 (counts>130)**<br>40,526样本 | DeBERTa-v3-large (435M) | **Acc: 99.04%**<br>**F1-macro: 97.89%** | ✅ **最佳方法！**<br>所有label F1 > 88%<br>发现语义任务类型 |
+| 11 | **DeBERTa 回归模型 (Wait Only)** | 回归 | MSE | 直接使用counts值 | DeBERTa-v3-base | MAE: 1.05<br>MSE: 6.19 | 针对Wait Only数据训练 |
+| 12 | **DeBERTa 分类模型 (Wait Only)** | 分类 (6类) | Weighted CrossEntropy | 手动分箱 (1,2,3,4,5-8,>8) | DeBERTa-v3-base | Acc: 44.47%<br>**F1-macro: 0.280** | 针对Wait Only数据训练，使用class weights |
 
 ---
 
@@ -246,6 +248,67 @@
 | 5 | Creative | Moderate | 12.0 | 9,069 (22.38%) | 100% creative关键词 |
 | 6 | Coding/Calc | Complex | 15.0 | 1,297 (3.20%) | 100% calculate关键词 |
 | 7 | Long-form | Complex | 16.9 | 1,034 (2.55%) | 长文本分析、总结 |
+### 方法 11: DeBERTa 回归模型 (Wait Only)
+**脚本**: `scripts/training/train_deberta_regressor_wait_only.py`
+**模型路径**: `predictor_deberta_regressor_wait_only/`
+
+- **任务定义**: 直接预测counts的具体数值
+- **模型配置**: `AutoModelForSequenceClassification` with `num_labels=1`
+- **损失函数**: MSE (Mean Squared Error)
+- **训练配置**:
+  - Epochs: 3
+  - Batch size: 8
+  - Learning rate: 2e-5
+  - Metric: MSE, MAE
+
+**性能结果**:
+
+```json
+{
+    "eval_loss": 0.1715116798877716,
+    "eval_mse": 6.193479537963867,
+    "eval_mae": 1.0496591329574585,
+    "eval_runtime": 33.0522,
+    "eval_samples_per_second": 119.175,
+    "eval_steps_per_second": 7.473,
+    "epoch": 3.0
+}
+```
+
+---
+
+### 方法 12: DeBERTa 分类模型 (Wait Only)
+**脚本**: `scripts/training/train_deberta_classifier_wait_only.py`
+**模型路径**: `predictor_deberta_classifier_wait_only/`
+
+- **任务定义**: 预测counts所属的6个类别
+- **标签构建**: 手动分箱
+  - Bin 0: counts = 1
+  - Bin 1: counts = 2
+  - Bin 2: counts = 3
+  - Bin 3: counts = 4
+  - Bin 4: counts = 5-8
+  - Bin 5: counts > 8
+- **损失函数**: Weighted CrossEntropy
+- **训练配置**:
+  - Epochs: 5
+  - Batch size: 8
+  - Learning rate: 2e-5
+  - Metric: Accuracy, F1-macro
+
+**性能结果**:
+
+```json
+{
+    "eval_loss": 1.6463533639907837,
+    "eval_accuracy": 0.4446897228354182,
+    "eval_f1_macro": 0.2797250791323674,
+    "eval_runtime": 33.8616,
+    "eval_samples_per_second": 120.402,
+    "eval_steps_per_second": 7.531,
+    "epoch": 5.0
+}
+```
 
 #### 模型训练
 - **模型**: DeBERTa-v3-large (435M)
